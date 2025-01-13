@@ -12,9 +12,11 @@ unsigned long hash(const char *str) {
 }
 
 int init_cache_record(Cache *record) {
-    record->response = (char *) calloc(CACHE_BUFFER_SIZE, sizeof(char));
+    record->request = 0;
+    record->response_len = 0;
+    record->buffer_size = 1024;  // Начальный размер буфера
+    record->response = malloc(record->buffer_size);
     if (record->response == NULL) {
-        perror("Error allocate memory to new response array");
         return EXIT_FAILURE;
     }
     record->next = NULL;
@@ -44,6 +46,23 @@ void add_request(Cache *record, char *req) {
 }
 
 void add_response(Cache *record, char *resp, unsigned long cur_position, unsigned long resp_size) {
+    // Проверяем, достаточно ли места в буфере
+    if (cur_position + resp_size > record->buffer_size) {
+        // Увеличиваем размер буфера
+        ssize_t new_size = record->buffer_size * 2;
+        while (cur_position + resp_size > new_size) {
+            new_size *= 2;
+        }
+        char *new_buffer = realloc(record->response, new_size);
+        if (new_buffer == NULL) {
+            perror("Failed to realloc buffer");
+            return;
+        }
+        record->response = new_buffer;
+        record->buffer_size = new_size;
+    }
+
+    // Копируем данные в буфер
     memcpy(record->response + cur_position, resp, resp_size);
 }
 

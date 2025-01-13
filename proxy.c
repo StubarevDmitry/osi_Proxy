@@ -175,7 +175,7 @@ void run_proxy() {
         close(server_socket);
         exit(EXIT_FAILURE);
     }
-    
+
     printf("Server listening on port %d\n", PORT);
 
     accept_new_client(server_socket);
